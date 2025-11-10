@@ -1548,9 +1548,10 @@ class TestSingleControlledRotationGates(QiskitTestCase):
 
     @data((gu1, cgu1), (grx, cgrx), (gry, cgry), (grz, cgrz))
     @unpack
+    # fmt: off
     def test_single_controlled_rotation_gates(self, gate, cgate):
         """Test the controlled rotation gates controlled on one qubit."""
-        # Normalize if a generic 'rx/ry/rz' gate lost its angle (e.g. via to_gate()).
+        # Normalize if a generic 'rx/ry/rz' Gate lost its angle (e.g. via to_gate()).
         if gate.name in {"rx", "ry", "rz"} and not getattr(gate, "params", None):
             theta = None
             if getattr(gate, "definition", None) and getattr(gate.definition, "data", None):
@@ -1595,6 +1596,8 @@ class TestSingleControlledRotationGates(QiskitTestCase):
             expected_cx = 6
 
         self.assertLessEqual(uqc.count_ops().get("cx", 0), expected_cx, f"\n{uqc}")
+    # fmt: on
+
 
     def test_composite(self):
         """Test composite gate count."""
