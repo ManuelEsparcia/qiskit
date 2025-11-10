@@ -1529,58 +1529,55 @@ class TestOpenControlledToMatrix(QiskitTestCase):
 class TestSingleControlledRotationGates(QiskitTestCase):
     """Test the controlled rotation gates controlled on one qubit."""
 
-    from qiskit.circuit.library.standard_gates import u1, rx, ry, rz
-
-    num_ctrl = 2
+    num_ctrl = 1
     num_target = 1
 
     theta = pi / 2
+
+    # Use real library gates with params (no .definition() / .to_gate() round-trip)
     gu1 = u1.U1Gate(theta)
     grx = rx.RXGate(theta)
     gry = ry.RYGate(theta)
     grz = rz.RZGate(theta)
 
-    ugu1 = u1.U1Gate(theta).definition
-    ugrx = rx.RXGate(theta).definition
-    ugry = ry.RYGate(theta).definition
-    ugrz = rz.RZGate(theta).definition
-    ugrz.params = grz.params
-
-    cgu1 = ugu1.control(num_ctrl)
-    cgrx = ugrx.control(num_ctrl)
-    cgry = ugry.control(num_ctrl)
-    cgrz = ugrz.control(num_ctrl)
+    # Controlled versions built directly from the real gates
+    cgu1 = gu1.control(num_ctrl)
+    cgrx = grx.control(num_ctrl)
+    cgry = gry.control(num_ctrl)
+    cgrz = grz.control(num_ctrl)
 
     @data((gu1, cgu1), (grx, cgrx), (gry, cgry), (grz, cgrz))
     @unpack
     def test_single_controlled_rotation_gates(self, gate, cgate):
-    
+        """Test the controlled rotation gates controlled on one qubit."""
+        # Normalize if a generic 'rx/ry/rz' gate lost its angle (e.g. via to_gate()).
         if gate.name in {"rx", "ry", "rz"} and not getattr(gate, "params", None):
             theta = None
             if getattr(gate, "definition", None) and getattr(gate.definition, "data", None):
-                # Intentamos recuperar el primer parámetro de alguna operación interna.
                 for inst in gate.definition.data:
-                    op = getattr(inst, "operation", None) or getattr(inst, "instruction", None)
+                    op = getattr(inst, "operation", None)
                     if op is not None and getattr(op, "params", None):
                         theta = op.params[0]
                         break
-            if theta is None:
-                self.fail("Rotation gate under test lost its angle param (empty/unknown definition).")
-            ctor = {"rx": RXGate, "ry": RYGate, "rz": RZGate}[gate.name]
-            gate = ctor(theta)
-            # Reconstruir la versión controlada para que cgate sea coherente con gate.
+            self.assertIsNotNone(theta, "Rotation gate under test has no angle.")
+            ctor_map = {"rx": rx.RXGate, "ry": ry.RYGate, "rz": rz.RZGate}
+            gate = ctor_map[gate.name](theta)
+            # Rebuild the controlled version to keep test semantics consistent.
             cgate = gate.control(self.num_ctrl)
-    
+
         if gate.name == "rz":
             iden = Operator.from_label("I")
             zgen = Operator.from_label("Z")
-            op_mat = (np.cos(0.5 * self.theta) * iden - 1j * np.sin(0.5 * self.theta) * zgen).data
+            op_mat = (
+                np.cos(0.5 * self.theta) * iden - 1j * np.sin(0.5 * self.theta) * zgen
+            ).data
         else:
             op_mat = Operator(gate).data
+
         ref_mat = Operator(cgate).data
         cop_mat = _compute_control_matrix(op_mat, self.num_ctrl)
         self.assertTrue(matrix_equal(cop_mat, ref_mat))
-    
+
         cqc = QuantumCircuit(self.num_ctrl + self.num_target)
         cqc.append(cgate, cqc.qregs[0])
         dag = circuit_to_dag(cqc)
@@ -1589,16 +1586,15 @@ class TestSingleControlledRotationGates(QiskitTestCase):
         uqc = dag_to_circuit(basis_translator.run(unroller.run(dag)))
         self.log.info("%s gate count: %d", cgate.name, uqc.size())
         self.log.info("\n%s", str(uqc))
-    
+
         if gate.name in ["ry", "rx"]:
             expected_cx = 8
         elif gate.name == "rz":
             expected_cx = 4
         else:  # u1
             expected_cx = 6
-    
-        self.assertLessEqual(uqc.count_ops().get("cx", 0), expected_cx, f"\n{uqc}")
 
+        self.assertLessEqual(uqc.count_ops().get("cx", 0), expected_cx, f"\n{uqc}")
 
     def test_composite(self):
         """Test composite gate count."""
