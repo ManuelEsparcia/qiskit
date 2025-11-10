@@ -1527,14 +1527,14 @@ class TestOpenControlledToMatrix(QiskitTestCase):
 
 @ddt
 class TestSingleControlledRotationGates(QiskitTestCase):
-    """Test the controlled rotation gates controlled on one qubit."""
+    """Test the controlled rotation gates controlled on one target with 2 controls."""
 
-    num_ctrl = 1
+    num_ctrl = 2
     num_target = 1
 
     theta = pi / 2
 
-    # Use real library gates with params (no .definition() / .to_gate() round-trip)
+    # Real library gates (no .definition() / .to_gate() round-trip)
     gu1 = u1.U1Gate(theta)
     grx = rx.RXGate(theta)
     gry = ry.RYGate(theta)
@@ -1548,10 +1548,9 @@ class TestSingleControlledRotationGates(QiskitTestCase):
 
     @data((gu1, cgu1), (grx, cgrx), (gry, cgry), (grz, cgrz))
     @unpack
-    # fmt: off
     def test_single_controlled_rotation_gates(self, gate, cgate):
-        """Test the controlled rotation gates controlled on one qubit."""
-        # Normalize if a generic 'rx/ry/rz' Gate lost its angle (e.g. via to_gate()).
+        """Test the controlled rotation gates controlled on one target with 2 controls."""
+        # Normalize: if a generic 'rx/ry/rz' Gate lost its angle (e.g., to_gate()).
         if gate.name in {"rx", "ry", "rz"} and not getattr(gate, "params", None):
             theta = None
             if getattr(gate, "definition", None) and getattr(gate.definition, "data", None):
@@ -1563,14 +1562,15 @@ class TestSingleControlledRotationGates(QiskitTestCase):
             self.assertIsNotNone(theta, "Rotation gate under test has no angle.")
             ctor_map = {"rx": rx.RXGate, "ry": ry.RYGate, "rz": rz.RZGate}
             gate = ctor_map[gate.name](theta)
-            # Rebuild the controlled version to keep test semantics consistent.
+            # Keep semantics: rebuild controlled version from normalized gate.
             cgate = gate.control(self.num_ctrl)
 
         if gate.name == "rz":
             iden = Operator.from_label("I")
             zgen = Operator.from_label("Z")
             op_mat = (
-                np.cos(0.5 * self.theta) * iden - 1j * np.sin(0.5 * self.theta) * zgen
+                np.cos(0.5 * self.theta) * iden
+                - 1j * np.sin(0.5 * self.theta) * zgen
             ).data
         else:
             op_mat = Operator(gate).data
@@ -1596,7 +1596,6 @@ class TestSingleControlledRotationGates(QiskitTestCase):
             expected_cx = 6
 
         self.assertLessEqual(uqc.count_ops().get("cx", 0), expected_cx, f"\n{uqc}")
-    # fmt: on
 
 
     def test_composite(self):
