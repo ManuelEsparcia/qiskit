@@ -1554,13 +1554,6 @@ class TestSingleControlledRotationGates(QiskitTestCase):
     @data((gu1, cgu1), (grx, cgrx), (gry, cgry), (grz, cgrz))
     @unpack
     def test_single_controlled_rotation_gates(self, gate, cgate):
-        """Test the controlled rotation gates controlled on one qubit."""
-        # --- normalize rotation gates for this test ---
-        # En algunos recorridos el test puede terminar pasando un Gate genérico
-        # llamado "rx"/"ry"/"rz" (p. ej., tras definition().to_gate()) que pierde
-        # los params (ángulo). Para este test, reconstruimos un RX/RY/RZ real con
-        # su ángulo y rehacemos el controlado para mantener la intención del test.
-        from qiskit.circuit.library import RXGate, RYGate, RZGate
     
         if gate.name in {"rx", "ry", "rz"} and not getattr(gate, "params", None):
             theta = None
