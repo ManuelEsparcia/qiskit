@@ -277,3 +277,4 @@ def _canonicalize_modifiers(modifiers):
         canonical_modifiers.append(ControlModifier(num_ctrl_qubits, ctrl_state))
 
     return canonical_modifiers
+
