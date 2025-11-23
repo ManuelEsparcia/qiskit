@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Union, List
+from collections.abc import Sequence
 
 from qiskit.circuit.operation import Operation
 from qiskit.circuit.parameterexpression import ParameterValueType
@@ -60,7 +60,7 @@ class PowerModifier(Modifier):
 class AnnotatedOperation(Operation):
     """Annotated operation."""
 
-    def __init__(self, base_op: Operation, modifiers: Union[Modifier, List[Modifier]]):
+    def __init__(self, base_op: Operation, modifiers: Modifier | Sequence[Modifier]):
         """
         Create a new AnnotatedOperation.
 
@@ -91,15 +91,15 @@ class AnnotatedOperation(Operation):
 
             op1 = AnnotatedOperation(SGate(), [InverseModifier(), ControlModifier(2)])
 
-            op2_inner = AnnotatedGate(SGate(), InverseModifier())
-            op2 = AnnotatedGate(op2_inner, ControlModifier(2))
+            op2_inner = AnnotatedOperation(SGate(), InverseModifier())
+            op2 = AnnotatedOperation(op2_inner, ControlModifier(2))
 
         Both op1 and op2 are semantically equivalent to an ``SGate()`` which is first
         inverted and then controlled by 2 qubits.
         """
         self.base_op = base_op
         """The base operation that the modifiers in this annotated operation applies to."""
-        self.modifiers = modifiers if isinstance(modifiers, List) else [modifiers]
+        self.modifiers = list(modifiers) if isinstance(modifiers, Sequence) else [modifiers]
         """Ordered sequence of the modifiers to apply to :attr:`base_op`.  The modifiers are applied
         in order from lowest index to highest index."""
 
@@ -169,7 +169,7 @@ class AnnotatedOperation(Operation):
         ``annotated``.
 
         Args:
-            num_ctrl_qubits: Number of controls to add. Defauls to ``1``.
+            num_ctrl_qubits: Number of controls to add. Defaults to ``1``.
             label: Ignored.
             ctrl_state: The control state of the gate, specified either as an integer or a bitstring
                 (e.g. ``"110"``). If ``None``, defaults to the all-ones state ``2**num_ctrl_qubits - 1``.
@@ -189,7 +189,7 @@ class AnnotatedOperation(Operation):
         """
         Return the inverse version of itself.
 
-        Implemented as an annotated operation, see  :class:`.AnnotatedOperation`.
+        Implemented as an annotated operation, see :class:`.AnnotatedOperation`.
 
         Args:
             annotated: ignored (used for consistency with other inverse methods)
@@ -206,7 +206,7 @@ class AnnotatedOperation(Operation):
         """
         Raise this gate to the power of ``exponent``.
 
-        Implemented as an annotated operation, see  :class:`.AnnotatedOperation`.
+        Implemented as an annotated operation, see :class:`.AnnotatedOperation`.
 
         Args:
             exponent: the power to raise the gate to
