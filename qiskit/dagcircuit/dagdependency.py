@@ -422,7 +422,7 @@ class DAGDependency:
         representation of a circuit, and hence there are no removed nodes (this is why
         iterating over all nodes is fine).
         """
-        
+
         max_node_id = len(self._multi_graph) - 1
         max_node = self.get_node(max_node_id)
 
