@@ -257,7 +257,6 @@ class BlockCollector:
         # Keep only blocks with at least min_block_size.
         matching_blocks = [block for block in matching_blocks if len(block) >= min_block_size]
 
-
         return matching_blocks
 
 
