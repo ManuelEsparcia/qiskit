@@ -415,17 +415,14 @@ class DAGDependency:
 
     def _update_edges(self):
         """
-        Updates DagDependency by adding edges to the newly added node (max_node)
+        Updates DAGDependency by adding edges to the newly added node (max_node)
         from the previously added nodes.
-        For each previously added node (prev_node), an edge from prev_node to max_node
-        is added if max_node is "reachable" from prev_node (this means that the two
-        nodes can be made adjacent by commuting them with other nodes), but the two nodes
-        themselves do not commute.
-
-        Currently. this function is only used when creating a new DAGDependency from another
+        ...
+        Currently, this function is only used when creating a new DAGDependency from another
         representation of a circuit, and hence there are no removed nodes (this is why
         iterating over all nodes is fine).
         """
+        
         max_node_id = len(self._multi_graph) - 1
         max_node = self.get_node(max_node_id)
 
@@ -596,13 +593,13 @@ class DAGDependency:
 
 
 def merge_no_duplicates(*iterables):
-    """Merge K list without duplicate using python heapq ordered merging
+    """Merge K lists without duplicates using Python ``heapq.merge`` ordered merging.
 
     Args:
-        *iterables: A list of k sorted lists
+        *iterables: A list of K sorted lists.
 
     Yields:
-        Iterator: List from the merging of the k ones (without duplicates
+        Iterator: Values from the merging of the K input lists (without duplicates).
     """
     last = object()
     for val in heapq.merge(*iterables):
